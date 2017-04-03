@@ -69,7 +69,7 @@ namespace TrustedAudioVideoMeeting
             var meetingConfiguration = new AdhocMeetingCreationInput(Guid.NewGuid().ToString("N") + " test meeting");
 
             // Schedule meeting
-            var adhocMeeting = await applicationEndpoint.Application.CreateAdhocMeetingAsync(loggingContext, meetingConfiguration).ConfigureAwait(false);
+            var adhocMeeting = await applicationEndpoint.Application.CreateAdhocMeetingAsync(meetingConfiguration, loggingContext).ConfigureAwait(false);
             
             WriteToConsoleInColor("ad hoc meeting uri : " + adhocMeeting.OnlineMeetingUri);
             WriteToConsoleInColor("ad hoc meeting join url : " + adhocMeeting.JoinUrl);
@@ -78,7 +78,13 @@ namespace TrustedAudioVideoMeeting
             platformSettings.SetCustomizedCallbackurl(callbackUri);
 
             // Start joining the meeting
-            var invitation = await adhocMeeting.JoinAdhocMeeting(loggingContext, null).ConfigureAwait(false);
+            ICommunication communication = applicationEndpoint.Application.Communication;
+            if(!communication.CanJoinAdhocMeeting(adhocMeeting))
+            {
+                throw new Exception("Cannot join adhoc meeting");
+            }
+
+            var invitation = await communication.JoinAdhocMeetingAsync(adhocMeeting, null, loggingContext).ConfigureAwait(false);
             var conversation = invitation.RelatedConversation;
 
             // Wait for the join to complete
