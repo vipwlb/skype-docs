@@ -25,7 +25,11 @@ namespace Microsoft.SfB.PlatformService.SDK.Samples.ApplicationCore
                     throw new InvalidOperationException("Failed to get valid GetAnonTokenInput intance");
                 }
 
-                var tokenResources = await AzureApplication.ApplicationEndpoint.Application.GetAnonApplicationTokenForMeetingAsync(LoggingContext, getAnonTokenInput.MeetingUrl, getAnonTokenInput.AllowedOrigins, getAnonTokenInput.ApplicationSessionId).ConfigureAwait(false);
+                var tokenResources = await AzureApplication.ApplicationEndpoint.Application.GetAnonApplicationTokenForMeetingAsync(
+                    getAnonTokenInput.MeetingUrl,
+                    getAnonTokenInput.AllowedOrigins,
+                    getAnonTokenInput.ApplicationSessionId,
+                    LoggingContext).ConfigureAwait(false);
 
                 if (tokenResources != null)
                 {

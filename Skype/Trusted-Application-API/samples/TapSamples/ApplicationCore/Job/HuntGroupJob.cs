@@ -218,11 +218,10 @@ namespace Microsoft.SfB.PlatformService.SDK.Samples.ApplicationCore
         {
             CallbackContext callbackcontext = new CallbackContext { InstanceId = this.InstanceId, JobId = this.JobId };
             string callbackContextJsonString = JsonConvert.SerializeObject(callbackcontext);
-            string CallbackUrl = string.Format(CultureInfo.InvariantCulture, AzureApplication.CallbackUriFormat, HttpUtility.UrlEncode(callbackContextJsonString));
 
             Logger.Instance.Information("Making outbound call to " + agent);
 
-            IAudioVideoInvitation invite = await communication.StartAudioAsync("customer call", agent, CallbackUrl, LoggingContext).ConfigureAwait(false);
+            IAudioVideoInvitation invite = await communication.StartAudioAsync("customer call", new SipUri(agent), callbackContextJsonString, LoggingContext).ConfigureAwait(false);
             await invite.WaitForInviteCompleteAsync().ConfigureAwait(false);
             IConversation c = invite.RelatedConversation;
             if (c.AudioVideoCall != null)
@@ -249,7 +248,7 @@ namespace Microsoft.SfB.PlatformService.SDK.Samples.ApplicationCore
 
                 IAudioVideoCall av = invite.RelatedConversation.AudioVideoCall;
 
-                ITransfer t = await av.TransferAsync(null, callContext, LoggingContext).ConfigureAwait(false);
+                ITransfer t = await av.TransferAsync((SipUri)null, callContext, LoggingContext).ConfigureAwait(false);
                 await t.WaitForTransferCompleteAsync().TimeoutAfterAsync(TimeSpan.FromSeconds(30)).ConfigureAwait(false);
                 Logger.Instance.Information("[HuntGroupJob] Transfer completed successfully!");
             }

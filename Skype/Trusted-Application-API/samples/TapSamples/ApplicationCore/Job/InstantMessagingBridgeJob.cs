@@ -96,7 +96,6 @@ namespace Microsoft.SfB.PlatformService.SDK.Samples.ApplicationCore
 
             CallbackContext callbackcontext = new CallbackContext { InstanceId = this.InstanceId, JobId = this.JobId };
             string callbackContextJsonString = JsonConvert.SerializeObject(callbackcontext);
-            string CallbackUrl = string.Format(CultureInfo.InvariantCulture, AzureApplication.CallbackUriFormat, HttpUtility.UrlEncode(callbackContextJsonString));
 
             string meetingUrl = string.Empty;
 
@@ -108,7 +107,14 @@ namespace Microsoft.SfB.PlatformService.SDK.Samples.ApplicationCore
             //Step1:
             Logger.Instance.Information(string.Format("[InstantMessagingBridgeFlow] Step 1: Start adhoc meeting: LoggingContext: {0}", LoggingContext));
 
-            IOnlineMeetingInvitation onlineMeetingInvite = await e.NewInvite.StartAdhocMeetingAsync(m_handleIncomingMessageInput.Subject, CallbackUrl, LoggingContext).ConfigureAwait(false);
+            IMessagingInvitation invitation = e.NewInvite;
+            ICommunication communication = AzureApplication.ApplicationEndpoint.Application.Communication;
+            if(!communication.CanStartAdhocMeeting(invitation))
+            {
+                throw new PlatformserviceApplicationException("Cannot start adhoc meeting");
+            }
+
+            IOnlineMeetingInvitation onlineMeetingInvite = await communication.StartAdhocMeetingAsync(invitation, m_handleIncomingMessageInput.Subject, callbackContextJsonString, LoggingContext).ConfigureAwait(false);
 
             if (string.IsNullOrEmpty(onlineMeetingInvite.MeetingUrl))
             {
@@ -146,7 +152,7 @@ namespace Microsoft.SfB.PlatformService.SDK.Samples.ApplicationCore
             #region Step 3 Start AcceptAndBridge
             //Step3:
             Logger.Instance.Information(string.Format("[InstantMessagingBridgeFlow] Step3:  Start AcceptAndBridge: LoggingContext: {0}", LoggingContext));
-            await e.NewInvite.AcceptAndBridgeAsync(LoggingContext, meetingUrl, m_handleIncomingMessageInput.Subject).ConfigureAwait(false);
+            await e.NewInvite.AcceptAndBridgeAsync(meetingUrl, m_handleIncomingMessageInput.Subject, LoggingContext).ConfigureAwait(false);
             await e.NewInvite.WaitForInviteCompleteAsync().ConfigureAwait(false);
             m_p2pConversation = e.NewInvite.RelatedConversation;
 
@@ -180,13 +186,17 @@ namespace Microsoft.SfB.PlatformService.SDK.Samples.ApplicationCore
                 Logger.Instance.Error(string.Format("[InstantMessagingBridgeFlow] conversationBridge == null after accept and bridge. LoggingContext: {0}", LoggingContext));
                 throw new PlatformserviceApplicationException("[InstantMessagingBridgeFlow]  conversationBridge == null after accept and bridge");
             }
-            await conversationBridge.AddBridgedParticipantAsync(LoggingContext, m_handleIncomingMessageInput.InvitedTargetDisplayName, m_handleIncomingMessageInput.InviteTargetUri, false).ConfigureAwait(false);
+            await conversationBridge.AddBridgedParticipantAsync(
+                m_handleIncomingMessageInput.InvitedTargetDisplayName,
+                new SipUri(m_handleIncomingMessageInput.InviteTargetUri),
+                false,
+                LoggingContext).ConfigureAwait(false);
             #endregion
 
             #region Step 6 Start addParticipant to conference
             //Step 6:
             Logger.Instance.Information(string.Format("[HandleIncomingMessageJob] Step6: Start addParticipant to conference: LoggingContext: {0}", LoggingContext));
-            IParticipantInvitation participantInvitation = await m_confConversation.AddParticipantAsync(m_handleIncomingMessageInput.InviteTargetUri, LoggingContext).ConfigureAwait(false);
+            IParticipantInvitation participantInvitation = await m_confConversation.AddParticipantAsync(new SipUri(m_handleIncomingMessageInput.InviteTargetUri), LoggingContext).ConfigureAwait(false);
             await participantInvitation.WaitForInviteCompleteAsync().ConfigureAwait(false);
             #endregion
         }
