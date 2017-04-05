@@ -21,6 +21,8 @@ namespace AudioVideoIVRSample
 
         private readonly LoggingContext m_loggingContext;
 
+        private bool m_isPromptPlaying;
+
         /// <summary>
         /// Actions which can be taken by an <see cref="AudioVideoIVRJob"/> in response to an incoming call or a tone event.
         /// </summary>
@@ -65,9 +67,10 @@ namespace AudioVideoIVRSample
         public AudioVideoIVRJob(IncomingInviteEventArgs<IAudioVideoInvitation> mIncomingInvitation, string callbackUri)
         {
             this.m_incomingInvitation = mIncomingInvitation;
-            m_jobId = Guid.NewGuid().ToString();
             this.m_callbackUri = new Uri(callbackUri);
+            m_jobId = Guid.NewGuid().ToString();
             m_loggingContext = new LoggingContext(m_jobId, string.Empty);
+            m_isPromptPlaying = false;
         }
 
         public void Start()
@@ -112,7 +115,6 @@ namespace AudioVideoIVRSample
             IAudioVideoCall pstnAv = m_pstnCallConversation.AudioVideoCall;
             IAudioVideoFlow pstnFlow = await pstnAv.WaitForAVFlowConnected().ConfigureAwait(false);
             pstnFlow.ToneReceivedEvent += ToneReceivedEvent;
-
             // Step 3 : play prompt
             await PlayPromptAsync(pstnFlow, AudioVideoIVRAction.PlayMainPrompt).ConfigureAwait(false);
 
@@ -150,8 +152,6 @@ namespace AudioVideoIVRSample
                 return;
             }
 
-            
-
             if (action == AudioVideoIVRAction.TerminateCall)
             {
                 Logger.Instance.Information("[AudioVideoIVRJob] Terminating the call.");
@@ -173,7 +173,13 @@ namespace AudioVideoIVRSample
             var resourceUri = new Uri(string.Format("{0}://{1}/resources/{2}", m_callbackUri.Scheme, m_callbackUri.Host, wavFile));
             try
             {
+                if (m_isPromptPlaying)
+                {
+                    await flow.StopPromptsAsync(m_loggingContext).ConfigureAwait(false);
+                }
+                m_isPromptPlaying = true;
                 await flow.PlayPromptAsync(resourceUri, m_loggingContext).ConfigureAwait(false);
+                m_isPromptPlaying = false;
             }
             catch (CapabilityNotAvailableException ex)
             {
