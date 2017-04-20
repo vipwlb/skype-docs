@@ -3,15 +3,34 @@ using System;
 
 namespace Microsoft.SfB.PlatformService.SDK.ClientModel
 {
+    /// <summary>
+    /// Represents settings of the <see cref="ClientPlatform"/>>
+    /// </summary>
     public class ClientPlatformSettings
     {
-        public Uri DiscoverUri { get; private set; }
+        /// <summary>
+        /// Gets the discover URI.
+        /// </summary>
+        /// <value>The discover URI.</value>
+        public Uri DiscoverUri { get; }
 
-        public Guid AADClientId     { get; private set; }
+        /// <summary>
+        /// Gets the aad client identifier.
+        /// </summary>
+        /// <value>The aad client identifier.</value>
+        public Guid AADClientId { get; }
 
-        public string AppTokenCertThumbprint { get; private set; }
+        /// <summary>
+        /// Gets the application token cert thumbprint.
+        /// </summary>
+        /// <value>The application token cert thumbprint.</value>
+        public string AppTokenCertThumbprint { get; }
 
-        public string AADClientSecret { get; private set; }
+        /// <summary>
+        /// Gets the aad client secret.
+        /// </summary>
+        /// <value>The aad client secret.</value>
+        public string AADClientSecret { get; }
 
         internal bool IsInternalPartner { get; set; }
 
@@ -28,18 +47,36 @@ namespace Microsoft.SfB.PlatformService.SDK.ClientModel
         /// </remarks>
         internal string CustomizedCallbackUrl { get; set; }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientPlatformSettings"/> class.
+        /// </summary>
+        /// <param name="aadClientId">The aad client identifier.</param>
+        /// <param name="appTokenCertThumbprint">The application token cert thumbprint.</param>
         public ClientPlatformSettings(Guid aadClientId, string appTokenCertThumbprint)
             :this(null, aadClientId, appTokenCertThumbprint,  null, false)
         {
-            ArgumentVerifier.ThrowOnNullOrEmptyString(appTokenCertThumbprint, "appTokenCertThumbprint");       
+            ArgumentVerifier.ThrowOnNullOrEmptyString(appTokenCertThumbprint, nameof(appTokenCertThumbprint));
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientPlatformSettings"/> class.
+        /// </summary>
+        /// <param name="clientSecret">The client secret.</param>
+        /// <param name="aadClientId">The aad client identifier.</param>
         public ClientPlatformSettings(string clientSecret, Guid aadClientId )
             : this(null, aadClientId, null,  clientSecret, false)
         {
-            ArgumentVerifier.ThrowOnNullOrEmptyString(clientSecret, "clientSecret");
+            ArgumentVerifier.ThrowOnNullOrEmptyString(clientSecret, nameof(clientSecret));
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="ClientPlatformSettings"/> class.
+        /// </summary>
+        /// <param name="discoverUri">The discover URI.</param>
+        /// <param name="aadClientId">The aad client identifier.</param>
+        /// <param name="appTokenCertThumbprint">The application token cert thumbprint.</param>
+        /// <param name="clientSecret">The client secret.</param>
+        /// <param name="isInternalPartner">if set to <c>true</c> [is internal partner].</param>
         public ClientPlatformSettings(Uri discoverUri,  Guid aadClientId, string appTokenCertThumbprint, string clientSecret=null, bool isInternalPartner = false)
         {
             DiscoverUri = discoverUri;
@@ -51,9 +88,7 @@ namespace Microsoft.SfB.PlatformService.SDK.ClientModel
     }
 }
 
-/// <summary>
-/// We put all not official supported features (workarounds to help developers) in this namespace
-/// </summary>
+// We put all not official supported features (workarounds to help developers) in this namespace
 namespace Microsoft.SfB.PlatformService.SDK.ClientModel.Internal
 {
     /// <summary>
@@ -82,6 +117,11 @@ namespace Microsoft.SfB.PlatformService.SDK.ClientModel.Internal
             This.CustomizedCallbackUrl = callbackUri.ToString();
         }
 
+        /// <summary>
+        /// Sets the is internal partner.
+        /// </summary>
+        /// <param name="This">The this.</param>
+        /// <param name="isInternalPartner">if set to <c>true</c> [is internal partner].</param>
         public static void SetIsInternalPartner(this ClientPlatformSettings This, bool isInternalPartner)
         {
             This.IsInternalPartner = isInternalPartner;

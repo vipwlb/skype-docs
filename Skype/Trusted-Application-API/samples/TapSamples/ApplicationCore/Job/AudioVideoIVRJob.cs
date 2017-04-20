@@ -100,7 +100,7 @@ namespace Microsoft.SfB.PlatformService.SDK.Samples.ApplicationCore
             if (input.Action == AudioVideoIVRActions.TransferToUser)
             {
                 Logger.Instance.Information("[AudioVideoIVRJob] Forwarding the call to {0}.", input.User);
-                await invite.ForwardAsync(LoggingContext, input.User).ConfigureAwait(false);
+                await invite.ForwardAsync(new SipUri(input.User), LoggingContext).ConfigureAwait(false);
             }
 
             if (input.Action == AudioVideoIVRActions.PlayPrompt || input.Action == AudioVideoIVRActions.RepeatPrompt)
@@ -252,7 +252,7 @@ namespace Microsoft.SfB.PlatformService.SDK.Samples.ApplicationCore
 
                 var audioVideoCall = flow.Parent as IAudioVideoCall;
 
-                await audioVideoCall.TransferAsync(keyAction.User, null, loggingContext).ConfigureAwait(false);
+                await audioVideoCall.TransferAsync(new SipUri(keyAction.User), null, loggingContext).ConfigureAwait(false);
                 CleanupEventHandlers(flow);
             }
             else if (keyAction.Action == AudioVideoIVRActions.TerminateCall)

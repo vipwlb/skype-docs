@@ -32,7 +32,6 @@ namespace Microsoft.SfB.PlatformService.SDK.Samples.ApplicationCore
             //Construct callbackUrl with callbackContext for callback message routing
             CallbackContext callbackcontext = new CallbackContext { InstanceId = this.InstanceId, JobId = this.JobId };
             string callbackContextJsonString = JsonConvert.SerializeObject(callbackcontext);
-            string CallbackUrl = string.Format(CultureInfo.InvariantCulture, AzureApplication.CallbackUriFormat, HttpUtility.UrlEncode(callbackContextJsonString));
 
             Logger.Instance.Information("[SimpleNotifyJob] start to send messaging invitation");
 
@@ -46,8 +45,8 @@ namespace Microsoft.SfB.PlatformService.SDK.Samples.ApplicationCore
 
             try
             {
-                //Invite resource will be there when this taskc completes
-                invite = await communication.StartMessagingWithIdentityAsync("Notification", jobinput.TargetUri, CallbackUrl, "Sample Application", "sip:sampleapplication@0MCorp2CloudPerf.onmicrosoft.com", LoggingContext).ConfigureAwait(false);
+                //Invite resource will be there when this task completes
+                invite = await communication.StartMessagingAsync("Notification", new SipUri(jobinput.TargetUri), callbackContextJsonString, LoggingContext).ConfigureAwait(false);
 
                 //Waiting for invite complete
                 await invite.WaitForInviteCompleteAsync().ConfigureAwait(false);
